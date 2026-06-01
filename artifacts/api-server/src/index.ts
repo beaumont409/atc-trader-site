@@ -22,4 +22,20 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // Register Telegram webhook so direct bot messages get forwarded to Gmail
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const domains = process.env.REPLIT_DOMAINS;
+  if (token && domains) {
+    const primaryDomain = domains.split(",")[0].trim();
+    const webhookUrl = `https://${primaryDomain}/api/telegram-webhook`;
+    fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: webhookUrl }),
+    })
+      .then((r) => r.json())
+      .then((data) => logger.info({ webhookUrl, data }, "Telegram webhook registered"))
+      .catch((err) => logger.error({ err }, "Failed to register Telegram webhook"));
+  }
 });
