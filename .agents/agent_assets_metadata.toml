@@ -1,0 +1,14 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "LD96f-y3ccnVTO8Ozkybv"
+uri = "file://artifacts/atv-buyer/src/assets/hero-atv.png"
+type = "image"
+title = "Vintage ATC 250R in dusty garage"
+
+[[generated]]
+id = "6NgeGCloVnn9d3xWSfiYj"
+uri = "file://artifacts/atv-buyer/src/assets/parts-atv.png"
+type = "image"
+title = "Beat up ATV frame in driveway"

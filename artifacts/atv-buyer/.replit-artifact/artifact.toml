@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "ATV Buyer Landing Page"
+version = "1.0.0"
+id = "artifacts/atv-buyer"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21216
+
+[services.development]
+run = "pnpm --filter @workspace/atv-buyer run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/atv-buyer", "run", "build" ]
+publicDir = "artifacts/atv-buyer/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21216"
+BASE_PATH = "/"

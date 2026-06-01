@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: leads
+    description: Seller lead operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /leads:
+    post:
+      operationId: submitLead
+      tags: [leads]
+      summary: Submit a seller lead
+      description: Submits seller contact info and ATV details, forwarding to Telegram
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadInput"
+      responses:
+        "201":
+          description: Lead submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadResult"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +66,60 @@ components:
           type: string
       required:
         - status
-
+    LeadInput:
+      type: object
+      required:
+        - name
+        - phone
+        - location
+        - year
+        - model
+        - condition
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Seller's full name
+        phone:
+          type: string
+          minLength: 1
+          description: Seller's phone number
+        location:
+          type: string
+          minLength: 1
+          description: City/State where the ATV is located
+        year:
+          type: string
+          enum: ["1985", "1986"]
+          description: Year of the ATV
+        model:
+          type: string
+          enum: ["ATC 250R", "TRX 250R"]
+          description: Model of the ATV
+        condition:
+          type: string
+          minLength: 1
+          description: Condition description (any condition accepted)
+        askingPrice:
+          type: ["string", "null"]
+          description: Seller's asking price (optional)
+        notes:
+          type: ["string", "null"]
+          description: Additional notes from the seller
+    LeadResult:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
