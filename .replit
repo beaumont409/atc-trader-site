@@ -30,3 +30,8 @@ externalPort = 8081
 [[ports]]
 localPort = 21216
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+TELEGRAM_OWNER_CHAT_ID = "8675886984"

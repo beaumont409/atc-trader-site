@@ -2,36 +2,22 @@ import TelegramBot from "node-telegram-bot-api";
 import { logger } from "./logger";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
+const ownerChatId = process.env.TELEGRAM_OWNER_CHAT_ID
+  ? parseInt(process.env.TELEGRAM_OWNER_CHAT_ID, 10)
+  : null;
 
 let bot: TelegramBot | null = null;
 
 if (token) {
   bot = new TelegramBot(token);
+  logger.info("Telegram bot initialized");
 } else {
   logger.warn("TELEGRAM_BOT_TOKEN not set — Telegram notifications disabled");
 }
 
-const OWNER_USERNAME = "@Texasmade48";
-
-export async function resolveOwnerchatId(): Promise<number | null> {
-  if (!bot) return null;
-  try {
-    const updates = await bot.getUpdates({ limit: 100, timeout: 0 });
-    for (const update of updates) {
-      const msg = update.message;
-      if (msg?.from?.username?.toLowerCase() === "texasmade48") {
-        return msg.from.id;
-      }
-    }
-    logger.warn({ username: OWNER_USERNAME }, "Could not find chat ID for owner from recent updates");
-    return null;
-  } catch (err) {
-    logger.error({ err }, "Failed to fetch Telegram updates");
-    return null;
-  }
+if (!ownerChatId) {
+  logger.warn("TELEGRAM_OWNER_CHAT_ID not set — Telegram notifications disabled");
 }
-
-let cachedChatId: number | null = null;
 
 export async function sendLeadToTelegram(data: {
   name: string;
@@ -48,12 +34,8 @@ export async function sendLeadToTelegram(data: {
     return false;
   }
 
-  if (!cachedChatId) {
-    cachedChatId = await resolveOwnerchatId();
-  }
-
-  if (!cachedChatId) {
-    logger.error("Cannot send Telegram message — owner chat ID unknown. Make sure @Texasmade48 has sent the bot a message first.");
+  if (!ownerChatId) {
+    logger.error("TELEGRAM_OWNER_CHAT_ID not set — cannot send notification");
     return false;
   }
 
@@ -71,11 +53,11 @@ export async function sendLeadToTelegram(data: {
   ].filter(Boolean).join("\n");
 
   try {
-    await bot.sendMessage(cachedChatId, lines, { parse_mode: "Markdown" });
-    logger.info({ chatId: cachedChatId }, "Telegram lead notification sent");
+    await bot.sendMessage(ownerChatId, lines, { parse_mode: "Markdown" });
+    logger.info({ chatId: ownerChatId }, "Telegram lead notification sent");
     return true;
   } catch (err) {
-    logger.error({ err, chatId: cachedChatId }, "Failed to send Telegram message");
+    logger.error({ err, chatId: ownerChatId }, "Failed to send Telegram message");
     return false;
   }
 }
