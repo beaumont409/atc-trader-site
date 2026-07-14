@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, leadsTable } from "@workspace/db";
 import { SubmitLeadBody } from "@workspace/api-zod";
-import { sendLeadToTelegram } from "../lib/telegram";
 import { sendLeadEmail } from "../lib/email";
 
 const router: IRouter = Router();
@@ -31,12 +30,8 @@ router.post("/leads", async (req, res): Promise<void> => {
 
   req.log.info({ leadId: lead.id }, "Lead saved to database");
 
-  const [sent, emailed] = await Promise.all([
-    sendLeadToTelegram({ name, phone, location, year, model, condition, askingPrice, notes }),
-    sendLeadEmail({ name, phone, location, year, model, condition, askingPrice, notes }),
-  ]);
+  const emailed = await sendLeadEmail({ name, phone, location, year, model, condition, askingPrice, notes });
 
-  if (!sent) req.log.warn({ leadId: lead.id }, "Lead saved but Telegram notification failed");
   if (!emailed) req.log.warn({ leadId: lead.id }, "Lead saved but email notification failed");
 
   res.status(201).json({
