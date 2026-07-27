@@ -52,8 +52,10 @@ export async function sendLeadEmail(data: {
     await transporter.sendMail({
       from: `"ATV Buyer Site" <${gmailAddress}>`,
       to: gmailAddress,
-      subject: `New ATV Lead: ${data.year} ${data.model} — ${data.name}`,
+      replyTo: data.phone ? undefined : undefined,
+      subject: `[ATV Lead] ${data.year} ${data.model} — ${data.name}`,
       html,
+      headers: { "X-Mailer": "ATV-Buyer-Site" },
     });
     logger.info("Lead email sent");
     return true;
