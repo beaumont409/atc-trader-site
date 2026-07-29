@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -36,3 +36,6 @@ externalPort = 3000
 [userenv.shared]
 TELEGRAM_OWNER_CHAT_ID = "8675886984"
 GMAIL_ADDRESS = "chaddubois21@gmail.com"
+
+[nix]
+channel = "stable-25_05"
