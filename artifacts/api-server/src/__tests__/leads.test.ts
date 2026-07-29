@@ -24,6 +24,7 @@ vi.mock("../lib/telegram", () => ({
 
 import app from "../app";
 import { db } from "@workspace/db";
+import { sendLeadEmail } from "../lib/email";
 import { sendLeadToTelegram } from "../lib/telegram";
 
 const validLead = {
@@ -44,6 +45,50 @@ function setupDbMock() {
   const valuesMock = vi.fn().mockReturnValue({ returning: returningMock });
   (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: valuesMock });
 }
+
+describe("POST /api/leads — email integration", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setupDbMock();
+  });
+
+  it("calls sendLeadEmail with the correct lead fields", async () => {
+    const res = await request(app).post("/api/leads").send(validLead);
+
+    expect(res.status).toBe(201);
+    expect(sendLeadEmail).toHaveBeenCalledOnce();
+    expect(sendLeadEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: validLead.name,
+        phone: validLead.phone,
+        location: validLead.location,
+        year: validLead.year,
+        model: validLead.model,
+        condition: validLead.condition,
+        askingPrice: validLead.askingPrice,
+        notes: validLead.notes,
+      }),
+    );
+  });
+
+  it("returns HTTP 201 even when sendLeadEmail returns false (soft failure)", async () => {
+    (sendLeadEmail as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+
+    const res = await request(app).post("/api/leads").send(validLead);
+
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("returns HTTP 400 for an invalid request body without calling sendLeadEmail", async () => {
+    const res = await request(app)
+      .post("/api/leads")
+      .send({ name: "Only Name" });
+
+    expect(res.status).toBe(400);
+    expect(sendLeadEmail).not.toHaveBeenCalled();
+  });
+});
 
 describe("POST /api/leads — Telegram integration", () => {
   beforeEach(() => {
