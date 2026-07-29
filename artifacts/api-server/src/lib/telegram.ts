@@ -19,6 +19,31 @@ if (!ownerChatId) {
   logger.warn("TELEGRAM_OWNER_CHAT_ID not set — Telegram notifications disabled");
 }
 
+/**
+ * Call once at server startup.
+ * In production, throws if either required Telegram env var is absent so the
+ * deployment fails loudly rather than silently dropping notifications.
+ * In other environments it only logs a warning.
+ */
+export function validateTelegramConfig(): void {
+  const missingToken = !process.env.TELEGRAM_BOT_TOKEN;
+  const missingChatId = !process.env.TELEGRAM_OWNER_CHAT_ID;
+
+  if (!missingToken && !missingChatId) return;
+
+  const missing: string[] = [];
+  if (missingToken) missing.push("TELEGRAM_BOT_TOKEN");
+  if (missingChatId) missing.push("TELEGRAM_OWNER_CHAT_ID");
+
+  const message = `Telegram config incomplete — missing: ${missing.join(", ")}. Notifications will not be delivered.`;
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(message);
+  } else {
+    logger.warn(message);
+  }
+}
+
 export async function sendLeadToTelegram(data: {
   name: string;
   phone: string;
