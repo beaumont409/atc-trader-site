@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { db, leadsTable } from "@workspace/db";
 import { SubmitLeadBody } from "@workspace/api-zod";
 import { sendLeadEmail } from "../lib/email";
+import { sendLeadToTelegram } from "../lib/telegram";
 
 const router: IRouter = Router();
 
@@ -33,6 +34,12 @@ router.post("/leads", async (req, res): Promise<void> => {
   const emailed = await sendLeadEmail({ name, phone, location, year, model, condition, askingPrice, notes });
 
   if (!emailed) req.log.warn({ leadId: lead.id }, "Lead saved but email notification failed");
+
+  sendLeadToTelegram({ name, phone, location, year, model, condition, askingPrice, notes }).then((sent) => {
+    if (!sent) req.log.warn({ leadId: lead.id }, "Lead saved but Telegram notification failed");
+  }).catch((err) => {
+    req.log.error({ leadId: lead.id, err }, "Unexpected error sending Telegram notification");
+  });
 
   res.status(201).json({
     success: true,
