@@ -1,6 +1,5 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { validateTelegramConfig } from "./lib/telegram";
 
 const rawPort = process.env["PORT"];
 
@@ -15,8 +14,6 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
-
-validateTelegramConfig();
 
 app.listen(port, (err) => {
   if (err) {
